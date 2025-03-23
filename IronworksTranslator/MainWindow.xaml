@@ -19,6 +19,9 @@
         PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus"
         SizeChanged="MainWindow_SizeChanged"
         LocationChanged="mainWindow_LocationChanged">
+    <Window.Resources>
+        <ui:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+    </Window.Resources>
     <Window.Background>
         <SolidColorBrush Opacity="0.2" Color="Black"></SolidColorBrush>
     </Window.Background>
@@ -219,6 +222,16 @@
                                     <ComboBox Name="TranslatorEngineComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:TranslatorEngine}}"
                                         SelectionChanged="TranslatorEngineComboBox_SelectionChanged"/>
+                                </StackPanel>
+                                <StackPanel Name="GeminiApiKeyPanel" Orientation="Horizontal" Visibility="{Binding ElementName=TranslatorEngineComboBox, Path=SelectedIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=1}">
+                                    <Label Foreground="White" Content="Gemini API 키"/>
+                                    <TextBox Name="GeminiApiKeyTextBox" Width="250" TextChanged="GeminiApiKeyTextBox_TextChanged"/>
+                                </StackPanel>
+                                <StackPanel Name="GeminiModelPanel" Orientation="Horizontal" Visibility="{Binding ElementName=TranslatorEngineComboBox, Path=SelectedIndex, Converter={StaticResource IntToVisibilityConverter}, ConverterParameter=1}">
+                                    <Label Foreground="White" Content="Gemini 모델"/>
+                                    <ComboBox Name="GeminiModelComboBox" SelectedIndex="0"
+                                        ItemsSource="{util:EnumToCollection EnumType={x:Type core:GeminiModel}}"
+                                        SelectionChanged="GeminiModelComboBox_SelectionChanged"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <Label Foreground="White" Content="NPC 대사 번역 방식"/>

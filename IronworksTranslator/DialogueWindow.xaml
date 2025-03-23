@@ -14,7 +14,7 @@
         ResizeMode="CanResizeWithGrip"
         AllowsTransparency="True"
         Background="Transparent"
-        Title="DialogueWindow" Height="80" Width="500"
+        Title="DialogueWindow"
         MinHeight="50" MinWidth="300"
         Name="dialogueWindow"
         SizeChanged="dialogueWindow_SizeChanged"

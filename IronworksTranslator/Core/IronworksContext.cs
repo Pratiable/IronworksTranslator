@@ -13,6 +13,9 @@ using HtmlAgilityPack;
 using PuppeteerSharp;
 using System.Threading.Tasks;
 using System.Linq;
+using Newtonsoft.Json;
+using System.Net.Http;
+using System.Text;
 
 namespace IronworksTranslator.Core
 {
@@ -275,6 +278,19 @@ namespace IronworksTranslator.Core
             {
                 throw new Exception("IronworksSettings is null");
             }
+
+            if (IronworksSettings.Instance.Translator.DefaultTranslatorEngine == TranslatorEngine.Gemini)
+            {
+                return TranslateChatWithGemini(sentence, from);
+            }
+            else
+            {
+                return TranslateChatWithPapago(sentence, from);
+            }
+        }
+
+        private string TranslateChatWithPapago(string sentence, ClientLanguage from)
+        {
             string tk = "ko";
             foreach (var item in LanguageCodeList.papago)
             {
@@ -314,6 +330,76 @@ namespace IronworksTranslator.Core
                     translated = translated.Insert(0, "[원문]");
                 }
                 return translated;
+            }
+        }
+
+        private string TranslateChatWithGemini(string sentence, ClientLanguage from)
+        {
+            if (string.IsNullOrEmpty(IronworksSettings.Instance.Translator.GeminiApiKey))
+            {
+                return $"[API 키를 설정해주세요] {sentence}";
+            }
+
+            string sourceLanguage = from.ToString();
+            string targetLanguage = IronworksSettings.Instance.Translator.NativeLanguage.ToString();
+
+            try
+            {
+                string apiKey = IronworksSettings.Instance.Translator.GeminiApiKey;
+                
+                string modelName = "gemini-2.0-flash";
+                if (IronworksSettings.Instance.Translator.DefaultGeminiModel == GeminiModel.Flash)
+                {
+                    modelName = "gemini-2.0-flash";
+                }
+                else
+                {
+                    modelName = "gemini-2.0-flash-lite";
+                }
+                
+                string apiUrl = $"https://generativelanguage.googleapis.com/v1/models/{modelName}:generateContent?key={apiKey}";
+                
+                var requestBody = new
+                {
+                    contents = new[] 
+                    {
+                        new 
+                        {
+                            role = "user",
+                            parts = new[] 
+                            {
+                                new 
+                                {
+                                    text = $"Translate the following text from {sourceLanguage} to {targetLanguage}. This is from the MMORPG game Final Fantasy XIV. Preserve the game's lore and character names, but make the translation sound natural in the target language. Avoid literal translations and use natural expressions that native speakers would use. If translating to Korean, use casual and natural Korean expressions rather than formal or literal translations. Return only the translation with no explanations: {sentence}"
+                                }
+                            }
+                        }
+                    }
+                };
+                
+                var json = JsonConvert.SerializeObject(requestBody);
+                
+                var client = new HttpClient();
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                
+                var responseTask = Task.Run(async () => 
+                {
+                    var response = await client.PostAsync(apiUrl, content);
+                    response.EnsureSuccessStatusCode();
+                    
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    dynamic responseObject = JsonConvert.DeserializeObject(responseBody);
+                    
+                    return responseObject.candidates[0].content.parts[0].text;
+                });
+                
+                string translated = responseTask.GetAwaiter().GetResult();
+                return translated;
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Exception {e.Message} when translating with Gemini: {sentence}");
+                return $"[번역 오류] {sentence}";
             }
         }
     }

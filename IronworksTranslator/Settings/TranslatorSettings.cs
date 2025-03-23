@@ -18,6 +18,8 @@ namespace IronworksTranslator.Settings
             DialogueLanguage = ClientLanguage.Japanese;
             DefaultDialogueTranslationMethod = 0; // Memory Search
             UseInternalAddress = false;
+            GeminiApiKey = string.Empty;
+            DefaultGeminiModel = GeminiModel.FlashLite;
         }
 
 
@@ -91,6 +93,34 @@ namespace IronworksTranslator.Settings
             }
         }
 
+        [JsonProperty]
+        public string GeminiApiKey
+        {
+            get => geminiApiKey;
+            set
+            {
+                if (value != geminiApiKey)
+                {
+                    geminiApiKey = value;
+                    OnSettingsChanged?.Invoke(this, nameof(GeminiApiKey), GeminiApiKey);
+                }
+            }
+        }
+
+        [JsonProperty]
+        public GeminiModel DefaultGeminiModel
+        {
+            get => defaultGeminiModel;
+            set
+            {
+                if (value != defaultGeminiModel)
+                {
+                    defaultGeminiModel = value;
+                    OnSettingsChanged?.Invoke(this, nameof(DefaultGeminiModel), DefaultGeminiModel);
+                }
+            }
+        }
+
         private ClientLanguage dialogueLanguage;
 
         private TranslatorEngine defaultTranslatorEngine;
@@ -99,6 +129,8 @@ namespace IronworksTranslator.Settings
         private DialogueTranslationMethod dialogueTranslationMethod;
 
         private bool useInternalAddress;
+        private string geminiApiKey = string.Empty;
+        private GeminiModel defaultGeminiModel;
 
         public event SettingsChangedEventHandler OnSettingsChanged;
     }

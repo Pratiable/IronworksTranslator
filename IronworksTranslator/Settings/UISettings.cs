@@ -15,8 +15,8 @@ namespace IronworksTranslator.Settings
             ChatBackgroundOpacity = 0.75;
 
             DialogueWindowWidth = 500;
-            DialogueWindowHeight = 80;
-            DialogueWindowPosTop = 100;
+            DialogueWindowHeight = 150;
+            DialogueWindowPosTop = 400;
             DialogueWindowPosLeft = 100;
             DialogueBackgroundOpacity = 0.75;
         }

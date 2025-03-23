@@ -27,10 +27,10 @@ namespace IronworksTranslator
         {
             Topmost = true;
             InitializeComponent();
-            isUIInitialized = true;
             ironworksContext = mainWindow.ironworksContext;
             ironworksSettings = mainWindow.ironworksSettings;
             LoadUISettings();
+            isUIInitialized = true;
 
             const int period = 500;
             chatboxTimer = new Timer(RefreshDialogueTextBox, null, 0, period);
@@ -87,17 +87,31 @@ namespace IronworksTranslator
             ContentBackgroundGrid.Opacity = ironworksSettings.UI.DialogueBackgroundOpacity;
             ContentOpacitySlider.Value = ironworksSettings.UI.DialogueBackgroundOpacity;
 
-            if (ironworksSettings.UI.DialogueWindowPosTop < 0 ||
-    ironworksSettings.UI.DialogueWindowPosTop > SystemParameters.PrimaryScreenHeight)
+            double maxWidth = SystemParameters.PrimaryScreenWidth * 0.8;
+            double maxHeight = SystemParameters.PrimaryScreenHeight * 0.8;
+            
+            if (ironworksSettings.UI.DialogueWindowWidth > maxWidth)
+                ironworksSettings.UI.DialogueWindowWidth = maxWidth;
+            
+            if (ironworksSettings.UI.DialogueWindowHeight > maxHeight)
+                ironworksSettings.UI.DialogueWindowHeight = maxHeight;
+                
+            dialogueWindow.Width = ironworksSettings.UI.DialogueWindowWidth;
+            dialogueWindow.Height = ironworksSettings.UI.DialogueWindowHeight;
+
+            if (ironworksSettings.UI.DialogueWindowPosTop < 0 || 
+                ironworksSettings.UI.DialogueWindowPosTop > SystemParameters.PrimaryScreenHeight - 100)
             {
-                ironworksSettings.UI.DialogueWindowPosTop = 100;
+                ironworksSettings.UI.DialogueWindowPosTop = 400;
             }
-            dialogueWindow.Top = ironworksSettings.UI.DialogueWindowPosTop;
-            if (ironworksSettings.UI.DialogueWindowPosLeft < 0 ||
-                ironworksSettings.UI.DialogueWindowPosLeft > SystemParameters.PrimaryScreenWidth)
+            
+            if (ironworksSettings.UI.DialogueWindowPosLeft < 0 || 
+                ironworksSettings.UI.DialogueWindowPosLeft > SystemParameters.PrimaryScreenWidth - 200)
             {
                 ironworksSettings.UI.DialogueWindowPosLeft = 100;
             }
+            
+            dialogueWindow.Top = ironworksSettings.UI.DialogueWindowPosTop;
             dialogueWindow.Left = ironworksSettings.UI.DialogueWindowPosLeft;
 
             var font = new FontFamily(ironworksSettings.UI.ChatTextboxFontFamily);

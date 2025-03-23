@@ -7,6 +7,8 @@ using IronworksTranslator.Util;
 using Serilog;
 using Serilog.Formatting.Compact;
 using Newtonsoft.Json;
+using System.Diagnostics;
+using System.Linq;
 
 namespace IronworksTranslator
 {

@@ -152,6 +152,8 @@ namespace IronworksTranslator
             DialogueLanguageComboBox.SelectedIndex = (int)ironworksSettings.Translator.DialogueLanguage;
 
             TranslatorEngineComboBox.SelectedIndex = (int)ironworksSettings.Translator.DefaultTranslatorEngine;
+            GeminiApiKeyTextBox.Text = ironworksSettings.Translator.GeminiApiKey;
+            GeminiModelComboBox.SelectedIndex = (int)ironworksSettings.Translator.DefaultGeminiModel;
             DialogueTranslateMethodComboBox.SelectedIndex = (int)ironworksSettings.Translator.DefaultDialogueTranslationMethod;
 
             ContentBackgroundGrid.Opacity = ironworksSettings.UI.ChatBackgroundOpacity;
@@ -216,16 +218,17 @@ namespace IronworksTranslator
                                     var sentence = decodedChat.Line.RemoveBefore(":");
                                     if (!ContainsNativeLanguage(decodedChat.Line))
                                     {
-                                        var translated = ironworksContext.TranslateChat(sentence, ironworksSettings.Chat.ChannelLanguage[code]);
+                                        var translatedSentence = ironworksContext.TranslateChat(sentence, ironworksSettings.Chat.ChannelLanguage[code]);
+                                        var translatedAuthor = ironworksContext.TranslateChat(author, ironworksSettings.Chat.ChannelLanguage[code]);
 
                                         Application.Current.Dispatcher.Invoke(() =>
                                         {
 
                                             TranslatedChatBox.Text +=
 #if DEBUG
-                                        $"[{decodedChat.Code}]{author}:{translated}{Environment.NewLine}";
+                                        $"[{decodedChat.Code}]{translatedAuthor}:{translatedSentence}{Environment.NewLine}";
 #else
-                                        $"{author}:{translated}{Environment.NewLine}";
+                                        $"{translatedAuthor}:{translatedSentence}{Environment.NewLine}";
 #endif
                                         });
                                     }
@@ -238,12 +241,13 @@ namespace IronworksTranslator
                                         var sentence = decodedChat.Line.RemoveBefore(":");
                                         if (!ContainsNativeLanguage(decodedChat.Line))
                                         {
-                                            var translated = ironworksContext.TranslateChat(sentence, ironworksSettings.Chat.ChannelLanguage[code]);
+                                            var translatedSentence = ironworksContext.TranslateChat(sentence, ironworksSettings.Chat.ChannelLanguage[code]);
+                                            var translatedAuthor = ironworksContext.TranslateChat(author, ironworksSettings.Chat.ChannelLanguage[code]);
 
                                             Application.Current.Dispatcher.Invoke(() =>
                                             {
 
-                                                dialogueWindow.PushDialogueTextBox($"{author}:{translated}{Environment.NewLine}");
+                                                dialogueWindow.PushDialogueTextBox($"{translatedAuthor}:{translatedSentence}{Environment.NewLine}");
                                             });
                                         }
                                     }
@@ -558,6 +562,24 @@ namespace IronworksTranslator
                 var languageIndex = ((ComboBox)sender).SelectedIndex;
                 ironworksSettings.Chat.NPCDialog.MajorLanguage = (ClientLanguage)languageIndex;
                 NPCDialogComboBox.SelectedIndex = languageIndex;
+            }
+        }
+
+        private void GeminiApiKeyTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (ironworksSettings != null)
+            {
+                TextBox box = sender as TextBox;
+                ironworksSettings.Translator.GeminiApiKey = box.Text;
+            }
+        }
+
+        private void GeminiModelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ironworksSettings != null)
+            {
+                ComboBox box = sender as ComboBox;
+                ironworksSettings.Translator.DefaultGeminiModel = (GeminiModel)box.SelectedIndex;
             }
         }
     }
