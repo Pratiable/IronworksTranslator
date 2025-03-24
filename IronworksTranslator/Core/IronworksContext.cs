@@ -289,8 +289,198 @@ namespace IronworksTranslator.Core
             }
         }
 
+        public (string authorTranslated, string messageTranslated) TranslateChatWithAuthor(string author, string message, ClientLanguage from, ChatCode chatCode, bool forceTranslateAuthor = false)
+        {
+            if (IronworksSettings.Instance == null)
+            {
+                throw new Exception("IronworksSettings is null");
+            }
+
+            if (chatCode == ChatCode.NPCDialog)
+            {
+                bool translateNpcAuthor = true;
+                
+                if (IronworksSettings.Instance.Translator.DefaultTranslatorEngine == TranslatorEngine.Gemini)
+                {
+                    return TranslateChatWithAuthorGemini(author, message, translateNpcAuthor, from);
+                }
+                else
+                {
+                    return TranslateChatWithAuthorPapago(author, message, translateNpcAuthor, from);
+                }
+            }
+
+            bool shouldTranslateAuthor = forceTranslateAuthor;
+            
+            if (!forceTranslateAuthor)
+            {
+                if (chatCode == ChatCode.Party || chatCode == ChatCode.Say || chatCode == ChatCode.Shout || 
+                    chatCode == ChatCode.Yell || chatCode == ChatCode.Alliance)
+                {
+                    shouldTranslateAuthor = false;
+                }
+                else if (IronworksSettings.Instance.Chat.SpeakerTranslation.TryGetValue(chatCode, out bool translateSpeaker))
+                {
+                    shouldTranslateAuthor = translateSpeaker;
+                }
+            }
+
+            if (IronworksSettings.Instance.Translator.DefaultTranslatorEngine == TranslatorEngine.Gemini)
+            {
+                return TranslateChatWithAuthorGemini(author, message, shouldTranslateAuthor, from);
+            }
+            else
+            {
+                return TranslateChatWithAuthorPapago(author, message, shouldTranslateAuthor, from);
+            }
+        }
+
+        private (string authorTranslated, string messageTranslated) TranslateChatWithAuthorPapago(string author, string message, bool shouldTranslateAuthor, ClientLanguage from)
+        {
+            if (!shouldTranslateAuthor)
+            {
+                return (author, TranslateChatWithPapago(message, from));
+            }
+
+            return (TranslateChatWithPapago(author, from), TranslateChatWithPapago(message, from));
+        }
+
+        private (string authorTranslated, string messageTranslated) TranslateChatWithAuthorGemini(string author, string message, bool shouldTranslateAuthor, ClientLanguage from)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(message))
+                {
+                    return (author, message);
+                }
+                
+                string apiKey = IronworksSettings.Instance.Translator.GeminiApiKey;
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    return (author, $"[API 키 없음] {message}");
+                }
+                
+                if (!shouldTranslateAuthor)
+                {
+                    return (author, TranslateChatWithGemini(message, from));
+                }
+
+                string sourceLanguage = from.ToString();
+                string targetLanguage = IronworksSettings.Instance.Translator.NativeLanguage.ToString();
+                
+                string modelName = "gemini-2.0-flash";
+                if (IronworksSettings.Instance.Translator.DefaultGeminiModel == GeminiModel.Flash)
+                {
+                    modelName = "gemini-2.0-flash";
+                }
+                else
+                {
+                    modelName = "gemini-2.0-flash-lite";
+                }
+
+                string apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:generateContent?key={apiKey}";
+
+                var requestBody = new
+                {
+                    contents = new[] 
+                    {
+                        new 
+                        {
+                            role = "user",
+                            parts = new[] 
+                            {
+                                new 
+                                {
+                                    text = $"Translate the following speaker name and message from {sourceLanguage} to {targetLanguage}. This is from the MMORPG game Final Fantasy XIV. Preserve the game's lore and character names, but make the translation sound natural in the target language. Return only the translated content. Speaker: '{author}', Message: '{message}'"
+                                }
+                            }
+                        }
+                    },
+                    generationConfig = new
+                    {
+                        response_mime_type = "application/json",
+                        response_schema = new
+                        {
+                            type = "OBJECT",
+                            properties = new
+                            {
+                                speaker = new { type = "STRING" },
+                                message = new { type = "STRING" }
+                            },
+                            required = new[] { "speaker", "message" }
+                        }
+                    }
+                };
+                
+                var json = JsonConvert.SerializeObject(requestBody);
+                var client = new HttpClient();
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                
+                int maxRetries = 3;
+                int currentRetry = 0;
+                
+                while (currentRetry < maxRetries)
+                {
+                    try
+                    {
+                        var responseTask = Task.Run(async () => 
+                        {
+                            var response = await client.PostAsync(apiUrl, content);
+                            response.EnsureSuccessStatusCode();
+                            
+                            var responseBody = await response.Content.ReadAsStringAsync();
+                            dynamic responseObject = JsonConvert.DeserializeObject(responseBody);
+                            
+                            string jsonContent = responseObject.candidates[0].content.parts[0].text;
+                            dynamic translationObject = JsonConvert.DeserializeObject(jsonContent);
+                            
+                            return new 
+                            { 
+                                Speaker = (string)translationObject.speaker, 
+                                Message = (string)translationObject.message 
+                            };
+                        });
+                        
+                        var result = responseTask.GetAwaiter().GetResult();
+                        if (result != null)
+                        {
+                            return (result.Speaker, result.Message);
+                        }
+                        
+                        currentRetry++;
+                        if (currentRetry < maxRetries)
+                        {
+                            Thread.Sleep(1000);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error($"Exception {e.Message} when translating with Gemini (attempt {currentRetry + 1})");
+                        currentRetry++;
+                        if (currentRetry < maxRetries)
+                        {
+                            Thread.Sleep(1000);
+                        }
+                    }
+                }
+                
+                return (author, $"{message}");
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Exception {e.Message} when translating with Gemini");
+                return (author, $"{message}");
+            }
+        }
+
         private string TranslateChatWithPapago(string sentence, ClientLanguage from)
         {
+            // 빈 문자열이나 null이면 그대로 반환
+            if (string.IsNullOrEmpty(sentence))
+            {
+                return sentence;
+            }
+
             string tk = "ko";
             foreach (var item in LanguageCodeList.papago)
             {
@@ -345,7 +535,7 @@ namespace IronworksTranslator.Core
                     }
                 }
                 
-                return $"[번역 실패] {sentence}";
+                return $"{sentence}";
             }
         }
 
@@ -353,6 +543,11 @@ namespace IronworksTranslator.Core
         {
             try
             {
+                if (string.IsNullOrEmpty(sentence))
+                {
+                    return sentence;
+                }
+                
                 string apiKey = IronworksSettings.Instance.Translator.GeminiApiKey;
                 if (string.IsNullOrEmpty(apiKey))
                 {
@@ -372,7 +567,7 @@ namespace IronworksTranslator.Core
                     modelName = "gemini-2.0-flash-lite";
                 }
 
-                string apiUrl = $"https://generativelanguage.googleapis.com/v1/models/{modelName}:generateContent?key={apiKey}";
+                string apiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:generateContent?key={apiKey}";
 
                 var requestBody = new
                 {
@@ -423,7 +618,6 @@ namespace IronworksTranslator.Core
                         currentRetry++;
                         if (currentRetry < maxRetries)
                         {
-                            Log.Warning($"Gemini translation attempt {currentRetry} failed, retrying...");
                             Thread.Sleep(1000);
                         }
                     }

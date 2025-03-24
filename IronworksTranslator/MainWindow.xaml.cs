@@ -203,7 +203,7 @@ namespace IronworksTranslator
                                     {
                                         TranslatedChatBox.Text +=
 #if DEBUG
-                                        $"[{decodedChat.Code}]{translated}{Environment.NewLine}";
+                                        $"{translated}{Environment.NewLine}";
 #else
                                         $"{translated}{Environment.NewLine}";
 #endif
@@ -212,44 +212,68 @@ namespace IronworksTranslator
                             }
                             else
                             {
-                                if (!code.Equals(ChatCode.NPCDialog))
+                                if (!code.Equals(ChatCode.NPCDialog) && !code.Equals(ChatCode.NPCAnnounce))
                                 {
                                     var author = decodedChat.Line.RemoveAfter(":");
                                     var sentence = decodedChat.Line.RemoveBefore(":");
                                     if (!ContainsNativeLanguage(decodedChat.Line))
                                     {
-                                        var translatedSentence = ironworksContext.TranslateChat(sentence, ironworksSettings.Chat.ChannelLanguage[code]);
-                                        var translatedAuthor = ironworksContext.TranslateChat(author, ironworksSettings.Chat.ChannelLanguage[code]);
+                                        var (translatedAuthor, translatedSentence) = ironworksContext.TranslateChatWithAuthor(
+                                            author, 
+                                            sentence, 
+                                            ironworksSettings.Chat.ChannelLanguage[code],
+                                            code
+                                        );
 
                                         Application.Current.Dispatcher.Invoke(() =>
                                         {
-
                                             TranslatedChatBox.Text +=
 #if DEBUG
-                                        $"[{decodedChat.Code}]{translatedAuthor}:{translatedSentence}{Environment.NewLine}";
+                                        $"{translatedAuthor}: {translatedSentence}{Environment.NewLine}";
 #else
-                                        $"{translatedAuthor}:{translatedSentence}{Environment.NewLine}";
+                                        $"{translatedAuthor}: {translatedSentence}{Environment.NewLine}";
 #endif
                                         });
                                     }
                                 }
                                 else
                                 {
-                                    if(ironworksSettings.Translator.DefaultDialogueTranslationMethod == DialogueTranslationMethod.ChatMessage)
+                                    if (ironworksSettings.Translator.DefaultDialogueTranslationMethod == DialogueTranslationMethod.MemorySearch)
                                     {
-                                        var author = decodedChat.Line.RemoveAfter(":");
-                                        var sentence = decodedChat.Line.RemoveBefore(":");
-                                        if (!ContainsNativeLanguage(decodedChat.Line))
+                                        // Skip update for chat
+                                    }
+                                    else if (ironworksSettings.Translator.DefaultDialogueTranslationMethod == DialogueTranslationMethod.ChatMessage)
+                                    {
+                                        string translatedText;
+                                        
+                                        var colonIndex = decodedChat.Line.IndexOf(':');
+                                        if (colonIndex > 0 && colonIndex < decodedChat.Line.Length - 1)
                                         {
-                                            var translatedSentence = ironworksContext.TranslateChat(sentence, ironworksSettings.Chat.ChannelLanguage[code]);
-                                            var translatedAuthor = ironworksContext.TranslateChat(author, ironworksSettings.Chat.ChannelLanguage[code]);
-
-                                            Application.Current.Dispatcher.Invoke(() =>
-                                            {
-
-                                                dialogueWindow.PushDialogueTextBox($"{translatedAuthor}:{translatedSentence}{Environment.NewLine}");
-                                            });
+                                            var author = decodedChat.Line.Substring(0, colonIndex);
+                                            var sentence = decodedChat.Line.Substring(colonIndex + 1);
+                                            
+                                            var (translatedAuthor, translatedSentence) = ironworksContext.TranslateChatWithAuthor(
+                                                author, 
+                                                sentence, 
+                                                ironworksSettings.Chat.ChannelLanguage[code],
+                                                code,
+                                                true
+                                            );
+                                            
+                                            translatedText = $"{translatedAuthor}: {translatedSentence}";
                                         }
+                                        else
+                                        {
+                                            translatedText = ironworksContext.TranslateChat(
+                                                decodedChat.Line, 
+                                                ironworksSettings.Chat.ChannelLanguage[code]
+                                            );
+                                        }
+
+                                        Application.Current.Dispatcher.Invoke(() =>
+                                        {
+                                            dialogueWindow.PushDialogueTextBox($"{translatedText}{Environment.NewLine}");
+                                        });
                                     }
                                 }
                             }
@@ -271,9 +295,9 @@ namespace IronworksTranslator
                     {
                         TranslatedChatBox.Text +=
 #if DEBUG
-                            $"[???][{chat.Code}]{chat.Line}{Environment.NewLine}";
+                            $"{chat.Line}{Environment.NewLine}";
 #else
-                            $"[???]{chat.Line}{Environment.NewLine}";
+                            $"{chat.Line}{Environment.NewLine}";
 #endif
                     });
                 }

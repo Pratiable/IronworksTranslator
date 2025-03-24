@@ -78,12 +78,14 @@ namespace IronworksTranslator
 
         private static void InitLogger()
         {
-            Log.Logger = new LoggerConfiguration()
+            var logConfig = new LoggerConfiguration()
                             .WriteTo.File(formatter: new CompactJsonFormatter(),
                                 path: $"./logs/log-{Birthdate}.txt",
                                 retainedFileCountLimit: null)
-                            .MinimumLevel.Debug()
-                            .CreateLogger();
+                            .MinimumLevel.Debug();
+            
+            Log.Logger = logConfig.CreateLogger();
+            
             Log.Debug("Logger initialized");
         }
 

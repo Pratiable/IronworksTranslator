@@ -42,6 +42,12 @@ namespace IronworksTranslator.Settings
             MarketSold = new Channel(ChatCode.MarketSold);
             Recruitment = new Channel(ChatCode.Recruitment);
 
+            Party.TranslateSpeaker = false;
+            Say.TranslateSpeaker = false;
+            Shout.TranslateSpeaker = false;
+            Yell.TranslateSpeaker = false;
+            Alliance.TranslateSpeaker = false;
+
             ChannelVisibility = new Dictionary<ChatCode, bool>() {
                 {ChatCode.Echo, Echo.Show },
                 {ChatCode.Emote, Echo.Show },
@@ -114,6 +120,43 @@ namespace IronworksTranslator.Settings
                 {ChatCode.Recruitment, Recruitment.MajorLanguage },
             };
 
+            SpeakerTranslation = new Dictionary<ChatCode, bool>()
+            {
+                {ChatCode.Echo, Echo.TranslateSpeaker },
+                {ChatCode.Emote, Emote.TranslateSpeaker },
+                {ChatCode.Say, Say.TranslateSpeaker },
+                {ChatCode.Yell, Yell.TranslateSpeaker },
+                {ChatCode.Shout, Shout.TranslateSpeaker },
+                {ChatCode.Tell, Tell.TranslateSpeaker },
+                {ChatCode.Party, Party.TranslateSpeaker },
+                {ChatCode.Alliance, Alliance.TranslateSpeaker },
+                {ChatCode.LinkShell1, LinkShell1.TranslateSpeaker },
+                {ChatCode.LinkShell2, LinkShell2.TranslateSpeaker },
+                {ChatCode.LinkShell3, LinkShell3.TranslateSpeaker },
+                {ChatCode.LinkShell4, LinkShell4.TranslateSpeaker },
+                {ChatCode.LinkShell5, LinkShell5.TranslateSpeaker },
+                {ChatCode.LinkShell6, LinkShell6.TranslateSpeaker },
+                {ChatCode.LinkShell7, LinkShell7.TranslateSpeaker },
+                {ChatCode.LinkShell8, LinkShell8.TranslateSpeaker },
+                {ChatCode.CWLinkShell1, CWLinkShell1.TranslateSpeaker },
+                {ChatCode.CWLinkShell2, CWLinkShell2.TranslateSpeaker },
+                {ChatCode.CWLinkShell3, CWLinkShell3.TranslateSpeaker },
+                {ChatCode.CWLinkShell4, CWLinkShell4.TranslateSpeaker },
+                {ChatCode.CWLinkShell5, CWLinkShell5.TranslateSpeaker },
+                {ChatCode.CWLinkShell6, CWLinkShell6.TranslateSpeaker },
+                {ChatCode.CWLinkShell7, CWLinkShell7.TranslateSpeaker },
+                {ChatCode.CWLinkShell8, CWLinkShell8.TranslateSpeaker },
+                {ChatCode.FreeCompany, FreeCompany.TranslateSpeaker },
+                {ChatCode.Novice, Novice.TranslateSpeaker },
+                {ChatCode.System, System.TranslateSpeaker },
+                {ChatCode.Notice, Notice.TranslateSpeaker },
+                {ChatCode.Error, Error.TranslateSpeaker },
+                {ChatCode.NPCDialog, NPCDialog.TranslateSpeaker },
+                {ChatCode.NPCAnnounce, NPCAnnounce.TranslateSpeaker },
+                {ChatCode.MarketSold, MarketSold.TranslateSpeaker },
+                {ChatCode.Recruitment, Recruitment.TranslateSpeaker },
+            };
+
             Echo.OnSettingsChanged += Channel_OnSettingsChanged;
             Emote.OnSettingsChanged += Channel_OnSettingsChanged;
             Say.OnSettingsChanged += Channel_OnSettingsChanged;
@@ -160,6 +203,9 @@ namespace IronworksTranslator.Settings
                 case "MajorLanguage":
                     ChannelLanguage[channel.Code] = (ClientLanguage)value;
                     break;
+                case "TranslateSpeaker":
+                    SpeakerTranslation[channel.Code] = (bool)value;
+                    break;
                 default:
                     break;
             }
@@ -169,6 +215,8 @@ namespace IronworksTranslator.Settings
         public Dictionary<ChatCode, bool> ChannelVisibility;
         [JsonIgnore]
         public Dictionary<ChatCode, ClientLanguage> ChannelLanguage;
+        [JsonIgnore]
+        public Dictionary<ChatCode, bool> SpeakerTranslation;
 
         public Channel Echo;
         public Channel Emote;

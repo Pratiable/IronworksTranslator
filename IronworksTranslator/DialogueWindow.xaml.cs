@@ -58,15 +58,44 @@ namespace IronworksTranslator
                                 msg = filter.Groups[1].Value;
                             }
                         }
-                        if (!msg.Equals(string.Empty))
+                        
+                        if (!string.IsNullOrEmpty(msg))
                         {
-                            var translated = ironworksContext.TranslateChat(msg, ironworksSettings.Translator.DialogueLanguage);
-
-                            Application.Current.Dispatcher.Invoke(() =>
+                            string translatedText;
+                            var colonIndex = msg.IndexOf(':');
+                            
+                            if (colonIndex > 0 && colonIndex < msg.Length - 1)
                             {
-                                DialogueTextBox.Text += $"{Environment.NewLine}{translated}";
-                                DialogueTextBox.ScrollToEnd();
-                            });
+                                var speaker = msg.Substring(0, colonIndex);
+                                var message = msg.Substring(colonIndex + 1);
+                                
+                                var (translatedSpeaker, translatedMessage) = ironworksContext.TranslateChatWithAuthor(
+                                    speaker, 
+                                    message, 
+                                    ironworksSettings.Translator.DialogueLanguage,
+                                    ChatCode.NPCDialog,
+                                    true
+                                );
+                                
+                                translatedText = $"{translatedSpeaker}:{translatedMessage}";
+                            }
+                            else
+                            {
+                                translatedText = ironworksContext.TranslateChat(msg, ironworksSettings.Translator.DialogueLanguage);
+                            }
+                            
+                            if (!string.IsNullOrEmpty(translatedText) && translatedText != msg)
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    DialogueTextBox.Text += $"{Environment.NewLine}{translatedText}";
+                                    DialogueTextBox.ScrollToEnd();
+                                });
+                            }
+                            else
+                            {
+                                Log.Warning($"NPC 대화 번역 실패: {msg}");
+                            }
                         }
                     }
                 }

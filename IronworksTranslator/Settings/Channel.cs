@@ -11,6 +11,7 @@ namespace IronworksTranslator.Settings
             Code = code;
             Show = true;
             MajorLanguage = ClientLanguage.Japanese;
+            TranslateSpeaker = true;
         }
 
         [JsonProperty]
@@ -42,6 +43,21 @@ namespace IronworksTranslator.Settings
             }
         }
         private ClientLanguage majorLanguage;
+
+        [JsonProperty]
+        public bool TranslateSpeaker
+        {
+            get => translateSpeaker;
+            set
+            {
+                if (value != translateSpeaker)
+                {
+                    translateSpeaker = value;
+                    OnSettingsChanged?.Invoke(this, nameof(TranslateSpeaker), TranslateSpeaker);
+                }
+            }
+        }
+        private bool translateSpeaker;
 
         [JsonIgnore]
         public readonly ChatCode Code;
