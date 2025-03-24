@@ -310,42 +310,57 @@ namespace IronworksTranslator.Core
             string testUrl = $"https://papago.naver.com/?sk={sk}&tk={tk}&st={Uri.EscapeDataString(sentence)}";
             lock (webPage)
             {
-                //Log.Debug($"Translate URL: {testUrl}");
                 Log.Debug($"Locked web browser for {sentence}");
                 string translated = sentence;
-                try
+                int maxRetries = 3;
+                int currentRetry = 0;
+                
+                while (currentRetry < maxRetries)
                 {
-                    var translateTask = Task.Run(async () => await RequestTranslate(testUrl));
-                    translated = translateTask.GetAwaiter().GetResult();
+                    try
+                    {
+                        var translateTask = Task.Run(async () => await RequestTranslate(testUrl));
+                        translated = translateTask.GetAwaiter().GetResult();
+                        
+                        if (!string.IsNullOrEmpty(translated) && !translated.Equals(sentence))
+                        {
+                            return translated;
+                        }
+                        
+                        currentRetry++;
+                        if (currentRetry < maxRetries)
+                        {
+                            Log.Warning($"Translation attempt {currentRetry} failed, retrying...");
+                            Thread.Sleep(1000);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error($"Exception {e.Message} when translating {sentence} (attempt {currentRetry + 1})");
+                        currentRetry++;
+                        if (currentRetry < maxRetries)
+                        {
+                            Thread.Sleep(1000);
+                        }
+                    }
                 }
-                catch (Exception e)
-                {
-                    Log.Error($"Exception {e.Message} when translating {sentence}");
-                    MessageBox.Show($"번역엔진이 예기치 않게 종료되었습니다.");
-                    Application.Current.Shutdown();
-                }
-
-                if (translated == null)
-                {
-                    translated = translated.Insert(0, "[원문]");
-                }
-                return translated;
+                
+                return $"[번역 실패] {sentence}";
             }
         }
 
         private string TranslateChatWithGemini(string sentence, ClientLanguage from)
         {
-            if (string.IsNullOrEmpty(IronworksSettings.Instance.Translator.GeminiApiKey))
-            {
-                return $"[API 키를 설정해주세요] {sentence}";
-            }
-
-            string sourceLanguage = from.ToString();
-            string targetLanguage = IronworksSettings.Instance.Translator.NativeLanguage.ToString();
-
             try
             {
                 string apiKey = IronworksSettings.Instance.Translator.GeminiApiKey;
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    return $"[API 키 없음] {sentence}";
+                }
+
+                string sourceLanguage = from.ToString();
+                string targetLanguage = IronworksSettings.Instance.Translator.NativeLanguage.ToString();
                 
                 string modelName = "gemini-2.0-flash";
                 if (IronworksSettings.Instance.Translator.DefaultGeminiModel == GeminiModel.Flash)
@@ -356,9 +371,9 @@ namespace IronworksTranslator.Core
                 {
                     modelName = "gemini-2.0-flash-lite";
                 }
-                
+
                 string apiUrl = $"https://generativelanguage.googleapis.com/v1/models/{modelName}:generateContent?key={apiKey}";
-                
+
                 var requestBody = new
                 {
                     contents = new[] 
@@ -378,23 +393,52 @@ namespace IronworksTranslator.Core
                 };
                 
                 var json = JsonConvert.SerializeObject(requestBody);
-                
                 var client = new HttpClient();
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 
-                var responseTask = Task.Run(async () => 
-                {
-                    var response = await client.PostAsync(apiUrl, content);
-                    response.EnsureSuccessStatusCode();
-                    
-                    var responseBody = await response.Content.ReadAsStringAsync();
-                    dynamic responseObject = JsonConvert.DeserializeObject(responseBody);
-                    
-                    return responseObject.candidates[0].content.parts[0].text;
-                });
+                int maxRetries = 3;
+                int currentRetry = 0;
                 
-                string translated = responseTask.GetAwaiter().GetResult();
-                return translated;
+                while (currentRetry < maxRetries)
+                {
+                    try
+                    {
+                        var responseTask = Task.Run(async () => 
+                        {
+                            var response = await client.PostAsync(apiUrl, content);
+                            response.EnsureSuccessStatusCode();
+                            
+                            var responseBody = await response.Content.ReadAsStringAsync();
+                            dynamic responseObject = JsonConvert.DeserializeObject(responseBody);
+                            
+                            return responseObject.candidates[0].content.parts[0].text;
+                        });
+                        
+                        string translated = responseTask.GetAwaiter().GetResult();
+                        if (!string.IsNullOrEmpty(translated) && !translated.Equals(sentence))
+                        {
+                            return translated;
+                        }
+                        
+                        currentRetry++;
+                        if (currentRetry < maxRetries)
+                        {
+                            Log.Warning($"Gemini translation attempt {currentRetry} failed, retrying...");
+                            Thread.Sleep(1000);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error($"Exception {e.Message} when translating with Gemini: {sentence} (attempt {currentRetry + 1})");
+                        currentRetry++;
+                        if (currentRetry < maxRetries)
+                        {
+                            Thread.Sleep(1000);
+                        }
+                    }
+                }
+                
+                return $"[번역 실패] {sentence}";
             }
             catch (Exception e)
             {
