@@ -391,7 +391,7 @@ namespace IronworksTranslator.Core
                             {
                                 new 
                                 {
-                                    text = $"Translate the following speaker name and message from {sourceLanguage} to {targetLanguage}. This is from the MMORPG game Final Fantasy XIV. Preserve the game's lore and character names, but make the translation sound natural in the target language. Return only the translated content. Speaker: '{author}', Message: '{message}'"
+                                    text = $"Translate the following speaker name and message from {sourceLanguage} to {targetLanguage}. This is from the MMORPG game Final Fantasy XIV. Preserve the game's lore and character names, but make the translation sound natural in Korean. 다음 지침을 따라주세요: 1) 게임 용어와 고유명사는 공식 번역을 유지 2) 캐릭터의 말투와 성격을 반영 3) 한국어 대화체의 자연스러운 어미와 종결형 사용 4) 일본어 경어체는 한국어 존댓말로, 반말은 반말로 유지. Return only the translated content. Speaker: '{author}', Message: '{message}'"
                                 }
                             }
                         }
