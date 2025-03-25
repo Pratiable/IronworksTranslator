@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Controls.Primitives;
 
 namespace IronworksTranslator
 {
@@ -22,6 +23,10 @@ namespace IronworksTranslator
         private readonly Timer chatboxTimer;
         private static Regex regexItem = new Regex(@"&\u0003(.*)\u0002I\u0002");
         private bool isUIInitialized = false;
+        private bool isAutoScrollEnabled = true;
+        private const int MAX_TEXT_LINES = 1000;
+        private ScrollViewer textBoxScrollViewer;
+        private bool isTextChangedByCode = false;
 
         public DialogueWindow(MainWindow mainWindow)
         {
@@ -32,9 +37,97 @@ namespace IronworksTranslator
             LoadUISettings();
             isUIInitialized = true;
 
+            DialogueTextBox.TextChanged += DialogueTextBox_TextChanged;
+
+            DialogueTextBox.Loaded += (s, e) => {
+                textBoxScrollViewer = FindVisualChild<ScrollViewer>(DialogueTextBox);
+                if (textBoxScrollViewer != null)
+                {
+                    textBoxScrollViewer.ScrollChanged += DialogueTextBox_ScrollChanged;
+                }
+                else
+                {
+                    Log.Warning("DialogueWindow: ScrollViewer not found");
+                }
+            };
+
             const int period = 500;
             chatboxTimer = new Timer(RefreshDialogueTextBox, null, 0, period);
             Log.Debug($"New RefreshChatbox timer with period {period}ms");
+        }
+
+        private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+                if (child != null && child is T)
+                {
+                    return (T)child;
+                }
+                else
+                {
+                    T childOfChild = FindVisualChild<T>(child);
+                    if (childOfChild != null)
+                    {
+                        return childOfChild;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private void DialogueTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            LimitTextLines(DialogueTextBox);
+        }
+
+        private void LimitTextLines(TextBox textBox)
+        {
+            if (textBox == null) return;
+
+            var lines = textBox.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            if (lines.Length > MAX_TEXT_LINES)
+            {
+                var excessLines = lines.Length - MAX_TEXT_LINES;
+                var newText = string.Join(Environment.NewLine, lines.Skip(excessLines));
+                
+                bool wasScrolledToEnd = false;
+                if (textBoxScrollViewer != null)
+                {
+                    wasScrolledToEnd = Math.Abs(textBoxScrollViewer.VerticalOffset - textBoxScrollViewer.ScrollableHeight) < 1.0;
+                }
+                
+                isTextChangedByCode = true;
+                
+                textBox.TextChanged -= DialogueTextBox_TextChanged;
+                textBox.Text = newText;
+                textBox.TextChanged += DialogueTextBox_TextChanged;
+                
+                isTextChangedByCode = false;
+                
+                if (wasScrolledToEnd && isAutoScrollEnabled)
+                {
+                    textBox.ScrollToEnd();
+                }
+            }
+        }
+
+        private void DialogueTextBox_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (isTextChangedByCode) return;
+            
+            if (e.VerticalChange < 0)
+            {
+                isAutoScrollEnabled = false;
+            }
+
+            ScrollViewer scrollViewer = sender as ScrollViewer;
+            if (scrollViewer != null && 
+                Math.Abs(scrollViewer.VerticalOffset - scrollViewer.ScrollableHeight) < 1.0)
+            {
+                isAutoScrollEnabled = true;
+            }
         }
 
         private void RefreshDialogueTextBox(object state)
@@ -88,8 +181,14 @@ namespace IronworksTranslator
                             {
                                 Application.Current.Dispatcher.Invoke(() =>
                                 {
+                                    isTextChangedByCode = true;
                                     DialogueTextBox.Text += $"{Environment.NewLine}{translatedText}";
-                                    DialogueTextBox.ScrollToEnd();
+                                    isTextChangedByCode = false;
+                                    
+                                    if (isAutoScrollEnabled)
+                                    {
+                                        DialogueTextBox.ScrollToEnd();
+                                    }
                                 });
                             }
                             else
@@ -106,8 +205,14 @@ namespace IronworksTranslator
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
+                isTextChangedByCode = true;
                 DialogueTextBox.Text += $"{Environment.NewLine}{dialogue}";
-                DialogueTextBox.ScrollToEnd();
+                isTextChangedByCode = false;
+                
+                if (isAutoScrollEnabled)
+                {
+                    DialogueTextBox.ScrollToEnd();
+                }
             });
         }
 
@@ -216,7 +321,11 @@ namespace IronworksTranslator
                 ironworksSettings.UI.DialogueWindowWidth = window.Width;
                 ironworksSettings.UI.DialogueWindowHeight = window.Height;
             }
-            DialogueTextBox.ScrollToEnd();
+            
+            if (isAutoScrollEnabled)
+            {
+                DialogueTextBox.ScrollToEnd();
+            }
         }
 
         private void MaskGrid_PreviewMouseWheel(object sender, MouseWheelEventArgs e)

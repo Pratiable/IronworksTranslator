@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Xceed.Wpf.Toolkit;
 using Fonts = System.Windows.Media.Fonts;
+using System.Windows.Controls.Primitives;
 
 namespace IronworksTranslator
 {
@@ -29,6 +30,10 @@ namespace IronworksTranslator
         private DialogueWindow dialogueWindow;
 
         private bool isUiInitialized = false;
+        private bool isAutoScrollEnabled = true;
+        private const int MAX_TEXT_LINES = 1000;
+        private ScrollViewer textBoxScrollViewer;
+        private bool isTextChangedByCode = false;
 
         public MainWindow()
         {
@@ -53,6 +58,85 @@ namespace IronworksTranslator
             const int period = 500;
             chatboxTimer = new Timer(UpdateChatbox, null, 0, period);
             Log.Debug($"New RefreshChatbox timer with period {period}ms");
+
+            TranslatedChatBox.TextChanged += TranslatedChatBox_TextChanged;
+            
+            TranslatedChatBox.Loaded += (s, e) => {
+                textBoxScrollViewer = FindVisualChild<ScrollViewer>(TranslatedChatBox);
+                if (textBoxScrollViewer != null)
+                {
+                    textBoxScrollViewer.ScrollChanged += TranslatedChatBox_ScrollChanged;
+                }
+                else
+                {
+                    Log.Warning("MainWindow: ScrollViewer not found");
+                }
+            };
+        }
+
+        private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+                if (child != null && child is T)
+                {
+                    return (T)child;
+                }
+                else
+                {
+                    T childOfChild = FindVisualChild<T>(child);
+                    if (childOfChild != null)
+                    {
+                        return childOfChild;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private void TranslatedChatBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            LimitTextLines(TranslatedChatBox);
+        }
+
+        private void LimitTextLines(TextBox textBox)
+        {
+            if (textBox == null) return;
+
+            var lines = textBox.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            if (lines.Length > MAX_TEXT_LINES)
+            {
+                var excessLines = lines.Length - MAX_TEXT_LINES;
+                var newText = string.Join(Environment.NewLine, lines.Skip(excessLines));
+                
+                bool wasScrolledToEnd = false;
+                if (textBoxScrollViewer != null)
+                {
+                    wasScrolledToEnd = Math.Abs(textBoxScrollViewer.VerticalOffset - textBoxScrollViewer.ScrollableHeight) < 1.0;
+                }
+                
+                isTextChangedByCode = true;
+                
+                if (textBox == TranslatedChatBox)
+                {
+                    TranslatedChatBox.TextChanged -= TranslatedChatBox_TextChanged;
+                }
+                
+                textBox.Text = newText;
+                
+                if (textBox == TranslatedChatBox)
+                {
+                    TranslatedChatBox.TextChanged += TranslatedChatBox_TextChanged;
+                }
+                
+                isTextChangedByCode = false;
+                
+                if (wasScrolledToEnd && isAutoScrollEnabled)
+                {
+                    textBox.ScrollToEnd();
+                }
+            }
         }
 
         private void ShowDialogueWindow()
@@ -175,6 +259,23 @@ namespace IronworksTranslator
             CaptureTouch(e.TouchDevice);
         }
 
+        private void TranslatedChatBox_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (isTextChangedByCode) return;
+            
+            if (e.VerticalChange < 0)
+            {
+                isAutoScrollEnabled = false;
+            }
+
+            ScrollViewer scrollViewer = sender as ScrollViewer;
+            if (scrollViewer != null && 
+                Math.Abs(scrollViewer.VerticalOffset - scrollViewer.ScrollableHeight) < 1.0)
+            {
+                isAutoScrollEnabled = true;
+            }
+        }
+
         private void UpdateChatbox(object state)
         {
             if (ChatQueue.q.Any())
@@ -201,12 +302,14 @@ namespace IronworksTranslator
 
                                     Application.Current.Dispatcher.Invoke(() =>
                                     {
+                                        isTextChangedByCode = true;
                                         TranslatedChatBox.Text +=
 #if DEBUG
                                         $"{translated}{Environment.NewLine}";
 #else
                                         $"{translated}{Environment.NewLine}";
 #endif
+                                        isTextChangedByCode = false;
                                     });
                                 }
                             }
@@ -293,17 +396,24 @@ namespace IronworksTranslator
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
+                        isTextChangedByCode = true;
                         TranslatedChatBox.Text +=
 #if DEBUG
                             $"{chat.Line}{Environment.NewLine}";
 #else
                             $"{chat.Line}{Environment.NewLine}";
 #endif
+                        isTextChangedByCode = false;
                     });
                 }
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    TranslatedChatBox.ScrollToEnd();
+                    if (isAutoScrollEnabled)
+                    {
+                        isTextChangedByCode = true;
+                        TranslatedChatBox.ScrollToEnd();
+                        isTextChangedByCode = false;
+                    }
                     //TranslatedChatBox.ScrollToVerticalOffset(double.MaxValue);
                 });
             }
@@ -474,7 +584,11 @@ namespace IronworksTranslator
                 ironworksSettings.UI.MainWindowWidth = window.Width;
                 ironworksSettings.UI.MainWindowHeight = window.Height;
             }
-            TranslatedChatBox.ScrollToEnd();
+            
+            if (isAutoScrollEnabled)
+            {
+                TranslatedChatBox.ScrollToEnd();
+            }
         }
 
         private void ContentOpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
