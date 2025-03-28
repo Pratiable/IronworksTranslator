@@ -7,9 +7,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Controls.Primitives;
+using RichTextBox = System.Windows.Controls.RichTextBox;
 
 namespace IronworksTranslator
 {
@@ -79,38 +81,22 @@ namespace IronworksTranslator
 
         private void DialogueTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            LimitTextLines(DialogueTextBox);
+            if (!isTextChangedByCode)
+            {
+                LimitTextLines();
+            }
         }
 
-        private void LimitTextLines(TextBox textBox)
+        private void LimitTextLines()
         {
-            if (textBox == null) return;
-
-            var lines = textBox.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-            if (lines.Length > MAX_TEXT_LINES)
+            isTextChangedByCode = true;
+            
+            while (DialogueTextBox.Document.Blocks.Count > MAX_TEXT_LINES)
             {
-                var excessLines = lines.Length - MAX_TEXT_LINES;
-                var newText = string.Join(Environment.NewLine, lines.Skip(excessLines));
-                
-                bool wasScrolledToEnd = false;
-                if (textBoxScrollViewer != null)
-                {
-                    wasScrolledToEnd = Math.Abs(textBoxScrollViewer.VerticalOffset - textBoxScrollViewer.ScrollableHeight) < 1.0;
-                }
-                
-                isTextChangedByCode = true;
-                
-                textBox.TextChanged -= DialogueTextBox_TextChanged;
-                textBox.Text = newText;
-                textBox.TextChanged += DialogueTextBox_TextChanged;
-                
-                isTextChangedByCode = false;
-                
-                if (wasScrolledToEnd && isAutoScrollEnabled)
-                {
-                    textBox.ScrollToEnd();
-                }
+                DialogueTextBox.Document.Blocks.Remove(DialogueTextBox.Document.Blocks.FirstBlock);
             }
+            
+            isTextChangedByCode = false;
         }
 
         private void DialogueTextBox_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -182,7 +168,19 @@ namespace IronworksTranslator
                                 Application.Current.Dispatcher.Invoke(() =>
                                 {
                                     isTextChangedByCode = true;
-                                    DialogueTextBox.Text += $"{Environment.NewLine}{translatedText}";
+                                    
+                                    Paragraph paragraph = new Paragraph();
+                                    paragraph.Margin = new Thickness(0, 5, 0, 0);
+                                    paragraph.LineHeight = 1.5;
+                                    
+                                    Run run = new Run(translatedText.TrimEnd());
+                                    
+                                    Color textColor = ironworksSettings.Chat.NPCDialog.Color;
+                                    run.Foreground = new SolidColorBrush(textColor);
+                                    
+                                    paragraph.Inlines.Add(run);
+                                    DialogueTextBox.Document.Blocks.Add(paragraph);
+                                    
                                     isTextChangedByCode = false;
                                     
                                     if (isAutoScrollEnabled)
@@ -206,7 +204,22 @@ namespace IronworksTranslator
             Application.Current.Dispatcher.Invoke(() =>
             {
                 isTextChangedByCode = true;
-                DialogueTextBox.Text += $"{Environment.NewLine}{dialogue}";
+                
+                Paragraph paragraph = new Paragraph();
+                paragraph.Margin = new Thickness(0, 5, 0, 0);
+                paragraph.LineHeight = 1.5;
+                
+                Run run = new Run(dialogue.TrimEnd());
+                
+                Color textColor = ironworksSettings.Chat.NPCAnnounce.Color;
+                run.Foreground = new SolidColorBrush(textColor);
+                
+                paragraph.Inlines.Add(run);
+                paragraph.Margin = new Thickness(0, 5, 0, 5);
+                paragraph.LineHeight = 1.5;
+                
+                DialogueTextBox.Document.Blocks.Add(paragraph);
+                
                 isTextChangedByCode = false;
                 
                 if (isAutoScrollEnabled)

@@ -12,9 +12,13 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Documents;
 using Xceed.Wpf.Toolkit;
 using Fonts = System.Windows.Media.Fonts;
 using System.Windows.Controls.Primitives;
+using System.IO;
+using System.Windows.Threading;
+using RichTextBox = System.Windows.Controls.RichTextBox;
 
 namespace IronworksTranslator
 {
@@ -23,17 +27,16 @@ namespace IronworksTranslator
     /// </summary>
     public partial class MainWindow : Window
     {
-        public IronworksContext ironworksContext;
-        public IronworksSettings ironworksSettings;
-        //private 
-        private readonly Timer chatboxTimer;
-        private DialogueWindow dialogueWindow;
-
-        private bool isUiInitialized = false;
-        private bool isAutoScrollEnabled = true;
-        private const int MAX_TEXT_LINES = 1000;
-        private ScrollViewer textBoxScrollViewer;
+        private ScrollViewer textBoxScrollViewer = null;
         private bool isTextChangedByCode = false;
+        private bool isAutoScrollEnabled = true;
+        private bool isUiInitialized = false;
+        private const int MAX_TEXT_LINES = 200;
+        internal IronworksContext ironworksContext = null;
+        internal IronworksSettings ironworksSettings = null;
+        private DialogueWindow dialogueWindow = null;
+        private System.Threading.Timer timer = null;
+        private const string WINDOW_TITLE = "IronworksTranslator";
 
         public MainWindow()
         {
@@ -56,7 +59,7 @@ namespace IronworksTranslator
             ShowDialogueWindow();
 
             const int period = 500;
-            chatboxTimer = new Timer(UpdateChatbox, null, 0, period);
+            timer = new Timer(UpdateChatbox, null, 0, period);
             Log.Debug($"New RefreshChatbox timer with period {period}ms");
 
             TranslatedChatBox.TextChanged += TranslatedChatBox_TextChanged;
@@ -97,46 +100,22 @@ namespace IronworksTranslator
 
         private void TranslatedChatBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            LimitTextLines(TranslatedChatBox);
+            if (!isTextChangedByCode)
+            {
+                LimitTextLines();
+            }
         }
 
-        private void LimitTextLines(TextBox textBox)
+        private void LimitTextLines()
         {
-            if (textBox == null) return;
-
-            var lines = textBox.Text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-            if (lines.Length > MAX_TEXT_LINES)
+            isTextChangedByCode = true;
+            
+            while (TranslatedChatBox.Document.Blocks.Count > MAX_TEXT_LINES)
             {
-                var excessLines = lines.Length - MAX_TEXT_LINES;
-                var newText = string.Join(Environment.NewLine, lines.Skip(excessLines));
-                
-                bool wasScrolledToEnd = false;
-                if (textBoxScrollViewer != null)
-                {
-                    wasScrolledToEnd = Math.Abs(textBoxScrollViewer.VerticalOffset - textBoxScrollViewer.ScrollableHeight) < 1.0;
-                }
-                
-                isTextChangedByCode = true;
-                
-                if (textBox == TranslatedChatBox)
-                {
-                    TranslatedChatBox.TextChanged -= TranslatedChatBox_TextChanged;
-                }
-                
-                textBox.Text = newText;
-                
-                if (textBox == TranslatedChatBox)
-                {
-                    TranslatedChatBox.TextChanged += TranslatedChatBox_TextChanged;
-                }
-                
-                isTextChangedByCode = false;
-                
-                if (wasScrolledToEnd && isAutoScrollEnabled)
-                {
-                    textBox.ScrollToEnd();
-                }
+                TranslatedChatBox.Document.Blocks.Remove(TranslatedChatBox.Document.Blocks.FirstBlock);
             }
+            
+            isTextChangedByCode = false;
         }
 
         private void ShowDialogueWindow()
@@ -194,13 +173,24 @@ namespace IronworksTranslator
 
         private void Welcome()
         {
-            //TranslatedChatBox.Text += $"최근에 강제종료했다면 작업관리자에서 PhantomJS.exe도 종료해주세요.{Environment.NewLine}";
-            if (App.newcomer)
-            //if (true)
+            if (isUiInitialized)
             {
-                TranslatedChatBox.Text += $"프로그램을 처음 쓰시는군요.{Environment.NewLine}";
-                TranslatedChatBox.Text += $"메뉴 버튼을 눌러 채널별 언어 설정을 마무리해주세요.{Environment.NewLine}";
-                ironworksSettings.UI.ChatTextboxFontFamily = ChatFontFamilyComboBox.SelectedValue as string;
+                return;
+            }
+            isUiInitialized = true;
+
+            if (File.Exists("settings.json"))
+            {
+            }
+            else
+            {
+                Paragraph paragraph = new Paragraph();
+                Run run1 = new Run("프로그램을 처음 쓰시는군요." + Environment.NewLine);
+                Run run2 = new Run("메뉴 버튼을 눌러 채널별 언어 설정을 마무리해주세요." + Environment.NewLine);
+                paragraph.Inlines.Add(run1);
+                paragraph.Inlines.Add(run2);
+                
+                TranslatedChatBox.Document.Blocks.Add(paragraph);
             }
         }
 
@@ -246,6 +236,8 @@ namespace IronworksTranslator
             var font = new FontFamily(ironworksSettings.UI.ChatTextboxFontFamily);
             exampleChatBox.FontFamily = font;
             TranslatedChatBox.FontFamily = font;
+            
+            TranslatedChatBox.Document.FontFamily = font;
         }
 
         private void Window_PreviewLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -293,6 +285,12 @@ namespace IronworksTranslator
                             ChatLogItem decodedChat = chat.Bytes.DecodeAutoTranslate();
                             Log.Debug("Chat: {@Chat}", decodedChat);
 
+                            Color channelColor = Colors.White;
+                            if (ironworksSettings.Chat.ChannelColor.TryGetValue(code, out Color color))
+                            {
+                                channelColor = color;
+                            }
+
                             if (code == ChatCode.Recruitment || code == ChatCode.System || code == ChatCode.Error
                                 || code == ChatCode.Notice || code == ChatCode.Emote || code == ChatCode.MarketSold)
                             {
@@ -303,12 +301,19 @@ namespace IronworksTranslator
                                     Application.Current.Dispatcher.Invoke(() =>
                                     {
                                         isTextChangedByCode = true;
-                                        TranslatedChatBox.Text +=
-#if DEBUG
-                                        $"{translated}{Environment.NewLine}";
-#else
-                                        $"{translated}{Environment.NewLine}";
-#endif
+                                        
+                                        Paragraph paragraph = new Paragraph();
+                                        paragraph.Margin = new Thickness(0, 5, 0, 0);
+                                        paragraph.LineHeight = 1.5;
+                                        paragraph.TextAlignment = TextAlignment.Left;
+                                        
+                                        string cleanedText = translated.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ").Trim();
+                                        Run run = new Run(cleanedText);
+                                        run.Foreground = new SolidColorBrush(channelColor);
+                                        paragraph.Inlines.Add(run);
+                                        
+                                        TranslatedChatBox.Document.Blocks.Add(paragraph);
+                                        
                                         isTextChangedByCode = false;
                                     });
                                 }
@@ -330,12 +335,18 @@ namespace IronworksTranslator
 
                                         Application.Current.Dispatcher.Invoke(() =>
                                         {
-                                            TranslatedChatBox.Text +=
-#if DEBUG
-                                        $"{translatedAuthor}: {translatedSentence}{Environment.NewLine}";
-#else
-                                        $"{translatedAuthor}: {translatedSentence}{Environment.NewLine}";
-#endif
+                                            Paragraph paragraph = new Paragraph();
+                                            paragraph.Margin = new Thickness(0, 5, 0, 0);
+                                            paragraph.LineHeight = 1.5;
+                                            paragraph.TextAlignment = TextAlignment.Left;
+                                            
+                                            string cleanedAuthor = translatedAuthor.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ").Trim();
+                                            string cleanedSentence = translatedSentence.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ").Trim();
+                                            Run run = new Run($"{cleanedAuthor}: {cleanedSentence}");
+                                            run.Foreground = new SolidColorBrush(channelColor);
+                                            paragraph.Inlines.Add(run);
+                                            
+                                            TranslatedChatBox.Document.Blocks.Add(paragraph);
                                         });
                                     }
                                 }
@@ -375,7 +386,7 @@ namespace IronworksTranslator
 
                                         Application.Current.Dispatcher.Invoke(() =>
                                         {
-                                            dialogueWindow.PushDialogueTextBox($"{translatedText}{Environment.NewLine}");
+                                            dialogueWindow.PushDialogueTextBox($"{translatedText}");
                                         });
                                     }
                                 }
@@ -385,11 +396,6 @@ namespace IronworksTranslator
                     else
                     {
                         Log.Information("Unexpected {@Code} when translating {@Message}", intCode, chat.Line);
-                        //Application.Current.Dispatcher.Invoke(() =>
-                        //{
-                        //    TranslatedChatBox.Text +=
-                        //$"[모르는 채널-제보요망][{chat.Code}]{chat.Line}{Environment.NewLine}";
-                        //});
                     }
                 }
                 else
@@ -397,12 +403,19 @@ namespace IronworksTranslator
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         isTextChangedByCode = true;
-                        TranslatedChatBox.Text +=
-#if DEBUG
-                            $"{chat.Line}{Environment.NewLine}";
-#else
-                            $"{chat.Line}{Environment.NewLine}";
-#endif
+                        
+                        Paragraph paragraph = new Paragraph();
+                        paragraph.Margin = new Thickness(0, 5, 0, 0);
+                        paragraph.LineHeight = 1.5;
+                        paragraph.TextAlignment = TextAlignment.Left;
+                        
+                        string cleanedText = chat.Line.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ").Trim();
+                        Run run = new Run(cleanedText);
+                        run.Foreground = Brushes.White;
+                        paragraph.Inlines.Add(run);
+                        
+                        TranslatedChatBox.Document.Blocks.Add(paragraph);
+                        
                         isTextChangedByCode = false;
                     });
                 }
@@ -411,10 +424,11 @@ namespace IronworksTranslator
                     if (isAutoScrollEnabled)
                     {
                         isTextChangedByCode = true;
+                        
                         TranslatedChatBox.ScrollToEnd();
+                        
                         isTextChangedByCode = false;
                     }
-                    //TranslatedChatBox.ScrollToVerticalOffset(double.MaxValue);
                 });
             }
         }
@@ -718,6 +732,262 @@ namespace IronworksTranslator
             {
                 ComboBox box = sender as ComboBox;
                 ironworksSettings.Translator.DefaultGeminiModel = (GeminiModel)box.SelectedIndex;
+            }
+        }
+
+        private void PartyColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Party.Color = e.NewValue.Value;
+            }
+        }
+
+        private void ShoutColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Shout.Color = e.NewValue.Value;
+            }
+        }
+
+        private void YellColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Yell.Color = e.NewValue.Value;
+            }
+        }
+
+        private void SayColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Say.Color = e.NewValue.Value;
+            }
+        }
+        
+        private void AllianceColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Alliance.Color = e.NewValue.Value;
+            }
+        }
+
+        private void EmoteColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Emote.Color = e.NewValue.Value;
+            }
+        }
+
+        private void TellColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Tell.Color = e.NewValue.Value;
+            }
+        }
+
+        private void FreeCompanyColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.FreeCompany.Color = e.NewValue.Value;
+            }
+        }
+
+        private void NoviceColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Novice.Color = e.NewValue.Value;
+            }
+        }
+
+        private void LinkShell1ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.LinkShell1.Color = e.NewValue.Value;
+            }
+        }
+
+        private void LinkShell2ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.LinkShell2.Color = e.NewValue.Value;
+            }
+        }
+
+        private void LinkShell3ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.LinkShell3.Color = e.NewValue.Value;
+            }
+        }
+
+        private void LinkShell4ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.LinkShell4.Color = e.NewValue.Value;
+            }
+        }
+
+        private void LinkShell5ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.LinkShell5.Color = e.NewValue.Value;
+            }
+        }
+
+        private void LinkShell6ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.LinkShell6.Color = e.NewValue.Value;
+            }
+        }
+
+        private void LinkShell7ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.LinkShell7.Color = e.NewValue.Value;
+            }
+        }
+
+        private void LinkShell8ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.LinkShell8.Color = e.NewValue.Value;
+            }
+        }
+
+        private void CWLinkShell1ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.CWLinkShell1.Color = e.NewValue.Value;
+            }
+        }
+        
+        private void CWLinkShell2ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.CWLinkShell2.Color = e.NewValue.Value;
+            }
+        }
+        
+        private void CWLinkShell3ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.CWLinkShell3.Color = e.NewValue.Value;
+            }
+        }
+        
+        private void CWLinkShell4ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.CWLinkShell4.Color = e.NewValue.Value;
+            }
+        }
+        
+        private void CWLinkShell5ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.CWLinkShell5.Color = e.NewValue.Value;
+            }
+        }
+        
+        private void CWLinkShell6ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.CWLinkShell6.Color = e.NewValue.Value;
+            }
+        }
+        
+        private void CWLinkShell7ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.CWLinkShell7.Color = e.NewValue.Value;
+            }
+        }
+        
+        private void CWLinkShell8ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.CWLinkShell8.Color = e.NewValue.Value;
+            }
+        }
+
+        private void NoticeColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Notice.Color = e.NewValue.Value;
+            }
+        }
+
+        private void SystemColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.System.Color = e.NewValue.Value;
+            }
+        }
+
+        private void ErrorColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Error.Color = e.NewValue.Value;
+            }
+        }
+
+        private void MarketSoldColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.MarketSold.Color = e.NewValue.Value;
+            }
+        }
+
+        private void RecruitmentColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.Recruitment.Color = e.NewValue.Value;
+            }
+        }
+
+        private void NPCDialogColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.NPCDialog.Color = e.NewValue.Value;
+            }
+        }
+
+        private void NPCAnnounceColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            if (e.NewValue.HasValue && ironworksSettings != null)
+            {
+                ironworksSettings.Chat.NPCAnnounce.Color = e.NewValue.Value;
             }
         }
     }

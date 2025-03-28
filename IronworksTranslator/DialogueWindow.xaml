@@ -109,17 +109,17 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Chatlog textbox -->
-                    <TextBox Grid.Column="0"
+                    <RichTextBox Grid.Column="0"
                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
-                         TextWrapping="Wrap"
                          x:Name="DialogueTextBox" x:FieldModifier="public"
                          IsReadOnly="True"
                          Foreground="White"
                          Background="Transparent"
                          VerticalScrollBarVisibility="Hidden"
-                         BorderBrush="Transparent"
-                         Text=""
-                    />
+                         BorderBrush="Transparent">
+                        <FlowDocument LineHeight="1.3" PagePadding="5,2,5,2">
+                        </FlowDocument>
+                    </RichTextBox>
                     <Button Grid.Column="1"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Top"

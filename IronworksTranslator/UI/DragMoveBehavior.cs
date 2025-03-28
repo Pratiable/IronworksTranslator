@@ -41,8 +41,9 @@ namespace IronworksTranslator.UI
                 {
                     window.DragMove();
                 }
-                catch (Exception ex)
+                catch
                 {
+                    // 예외 무시
                 }
             }));
         }

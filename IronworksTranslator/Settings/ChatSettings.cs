@@ -1,6 +1,7 @@
 ﻿using IronworksTranslator.Core;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace IronworksTranslator.Settings
 {
@@ -42,6 +43,41 @@ namespace IronworksTranslator.Settings
             MarketSold = new Channel(ChatCode.MarketSold);
             Recruitment = new Channel(ChatCode.Recruitment);
 
+            Party.Color = Colors.LightSkyBlue;
+            Say.Color = Colors.White;
+            Shout.Color = Colors.Orange;
+            Yell.Color = Colors.Yellow;
+            Alliance.Color = Colors.MediumPurple;
+            
+            LinkShell1.Color = Colors.LightGreen;
+            LinkShell2.Color = Colors.LightGreen;
+            LinkShell3.Color = Colors.LightGreen;
+            LinkShell4.Color = Colors.LightGreen;
+            LinkShell5.Color = Colors.LightGreen;
+            LinkShell6.Color = Colors.LightGreen;
+            LinkShell7.Color = Colors.LightGreen;
+            LinkShell8.Color = Colors.LightGreen;
+            
+            CWLinkShell1.Color = Colors.LightBlue;
+            CWLinkShell2.Color = Colors.LightBlue;
+            CWLinkShell3.Color = Colors.LightBlue;
+            CWLinkShell4.Color = Colors.LightBlue;
+            CWLinkShell5.Color = Colors.LightBlue;
+            CWLinkShell6.Color = Colors.LightBlue;
+            CWLinkShell7.Color = Colors.LightBlue;
+            CWLinkShell8.Color = Colors.LightBlue;
+            
+            FreeCompany.Color = Colors.LightSeaGreen;
+            Novice.Color = Colors.LightCoral;
+            
+            System.Color = Colors.Gray;
+            Notice.Color = Colors.LightYellow;
+            Error.Color = Colors.Red;
+            NPCDialog.Color = Colors.LightGoldenrodYellow;
+            NPCAnnounce.Color = Colors.LightSalmon;
+            MarketSold.Color = Colors.Gold;
+            Recruitment.Color = Colors.Violet;
+            
             Party.TranslateSpeaker = false;
             Say.TranslateSpeaker = false;
             Shout.TranslateSpeaker = false;
@@ -157,6 +193,43 @@ namespace IronworksTranslator.Settings
                 {ChatCode.Recruitment, Recruitment.TranslateSpeaker },
             };
 
+            ChannelColor = new Dictionary<ChatCode, Color>()
+            {
+                {ChatCode.Echo, Echo.Color },
+                {ChatCode.Emote, Emote.Color },
+                {ChatCode.Say, Say.Color },
+                {ChatCode.Yell, Yell.Color },
+                {ChatCode.Shout, Shout.Color },
+                {ChatCode.Tell, Tell.Color },
+                {ChatCode.Party, Party.Color },
+                {ChatCode.Alliance, Alliance.Color },
+                {ChatCode.LinkShell1, LinkShell1.Color },
+                {ChatCode.LinkShell2, LinkShell2.Color },
+                {ChatCode.LinkShell3, LinkShell3.Color },
+                {ChatCode.LinkShell4, LinkShell4.Color },
+                {ChatCode.LinkShell5, LinkShell5.Color },
+                {ChatCode.LinkShell6, LinkShell6.Color },
+                {ChatCode.LinkShell7, LinkShell7.Color },
+                {ChatCode.LinkShell8, LinkShell8.Color },
+                {ChatCode.CWLinkShell1, CWLinkShell1.Color },
+                {ChatCode.CWLinkShell2, CWLinkShell2.Color },
+                {ChatCode.CWLinkShell3, CWLinkShell3.Color },
+                {ChatCode.CWLinkShell4, CWLinkShell4.Color },
+                {ChatCode.CWLinkShell5, CWLinkShell5.Color },
+                {ChatCode.CWLinkShell6, CWLinkShell6.Color },
+                {ChatCode.CWLinkShell7, CWLinkShell7.Color },
+                {ChatCode.CWLinkShell8, CWLinkShell8.Color },
+                {ChatCode.FreeCompany, FreeCompany.Color },
+                {ChatCode.Novice, Novice.Color },
+                {ChatCode.System, System.Color },
+                {ChatCode.Notice, Notice.Color },
+                {ChatCode.Error, Error.Color },
+                {ChatCode.NPCDialog, NPCDialog.Color },
+                {ChatCode.NPCAnnounce, NPCAnnounce.Color },
+                {ChatCode.MarketSold, MarketSold.Color },
+                {ChatCode.Recruitment, Recruitment.Color },
+            };
+
             Echo.OnSettingsChanged += Channel_OnSettingsChanged;
             Emote.OnSettingsChanged += Channel_OnSettingsChanged;
             Say.OnSettingsChanged += Channel_OnSettingsChanged;
@@ -206,6 +279,9 @@ namespace IronworksTranslator.Settings
                 case "TranslateSpeaker":
                     SpeakerTranslation[channel.Code] = (bool)value;
                     break;
+                case "Color":
+                    ChannelColor[channel.Code] = (Color)value;
+                    break;
                 default:
                     break;
             }
@@ -217,6 +293,8 @@ namespace IronworksTranslator.Settings
         public Dictionary<ChatCode, ClientLanguage> ChannelLanguage;
         [JsonIgnore]
         public Dictionary<ChatCode, bool> SpeakerTranslation;
+        [JsonIgnore]
+        public Dictionary<ChatCode, Color> ChannelColor;
 
         public Channel Echo;
         public Channel Emote;

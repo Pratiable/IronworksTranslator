@@ -1,5 +1,7 @@
 ﻿using IronworksTranslator.Core;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System.Windows.Media;
 
 namespace IronworksTranslator.Settings
 {
@@ -12,6 +14,7 @@ namespace IronworksTranslator.Settings
             Show = true;
             MajorLanguage = ClientLanguage.Japanese;
             TranslateSpeaker = true;
+            Color = Colors.White;
         }
 
         [JsonProperty]
@@ -58,6 +61,41 @@ namespace IronworksTranslator.Settings
             }
         }
         private bool translateSpeaker;
+
+        [JsonProperty(PropertyName = "Color")]
+        private string ColorString
+        {
+            get => Color.ToString();
+            set
+            {
+                if (value != null)
+                {
+                    try
+                    {
+                        Color = (Color)ColorConverter.ConvertFromString(value);
+                    }
+                    catch
+                    {
+                        Color = Colors.White;
+                    }
+                }
+            }
+        }
+
+        [JsonIgnore]
+        public Color Color
+        {
+            get => color;
+            set
+            {
+                if (value != color)
+                {
+                    color = value;
+                    OnSettingsChanged?.Invoke(this, nameof(Color), Color);
+                }
+            }
+        }
+        private Color color = Colors.White;
 
         [JsonIgnore]
         public readonly ChatCode Code;

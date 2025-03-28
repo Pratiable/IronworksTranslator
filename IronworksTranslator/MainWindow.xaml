@@ -10,6 +10,7 @@
         xmlns:util="clr-namespace:IronworksTranslator.Util"
         xmlns:ui="clr-namespace:IronworksTranslator.UI"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:system="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
         mc:Ignorable="d"
         Name="mainWindow" Icon="icon.ico"
         Title="IronworksTranslator" Height="200" Width="420"
@@ -167,15 +168,16 @@
                 </Grid>
 
                 <!-- Chatlog textbox -->
-                <TextBox Grid.Row="0" Panel.ZIndex="1"
+                <RichTextBox Grid.Row="0" Panel.ZIndex="1"
                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
-                         TextWrapping="Wrap" Text="" 
                          x:Name="TranslatedChatBox" x:FieldModifier="public"
                          IsReadOnly="True"
                          Foreground="White"
                          BorderBrush="Transparent"
-                         Background="Transparent"
-                />
+                         Background="Transparent">
+                    <FlowDocument LineHeight="1.0" PagePadding="5,2,5,2">
+                    </FlowDocument>
+                </RichTextBox>
 
                 <!-- General settings grid -->
                 <Grid x:Name="GeneralSettingsGrid"
@@ -298,6 +300,10 @@
                                         <ComboBox Name="EmoteComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="EmoteComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="EmoteColorPicker" Width="70" Height="24"
+                                                          SelectedColor="LightGreen"
+                                                          SelectedColorChanged="EmoteColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="TellPanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="귓속말"/>
@@ -309,6 +315,10 @@
                                         <ComboBox Name="TellComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="TellComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="TellColorPicker" Width="70" Height="24"
+                                                          SelectedColor="Pink"
+                                                          SelectedColorChanged="TellColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="SayPanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="말하기"/>
@@ -320,6 +330,10 @@
                                         <ComboBox Name="SayComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="SayComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="SayColorPicker" Width="70" Height="24"
+                                                          SelectedColor="White"
+                                                          SelectedColorChanged="SayColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="YellPanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="떠들기"/>
@@ -331,6 +345,10 @@
                                         <ComboBox Name="YellComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="YellComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="YellColorPicker" Width="70" Height="24"
+                                                          SelectedColor="Yellow"
+                                                          SelectedColorChanged="YellColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="ShoutPanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="외치기"/>
@@ -342,6 +360,10 @@
                                         <ComboBox Name="ShoutComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="ShoutComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="ShoutColorPicker" Width="70" Height="24"
+                                                          SelectedColor="Orange"
+                                                          SelectedColorChanged="ShoutColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="PartyPanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="파티"/>
@@ -353,6 +375,10 @@
                                         <ComboBox Name="PartyComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="PartyComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="PartyColorPicker" Width="70" Height="24"
+                                                          SelectedColor="LightSkyBlue"
+                                                          SelectedColorChanged="PartyColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="AlliancePanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="연합 파티"/>
@@ -364,6 +390,10 @@
                                         <ComboBox Name="AllianceComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="AllianceComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="AllianceColorPicker" Width="70" Height="24"
+                                                          SelectedColor="MediumPurple"
+                                                          SelectedColorChanged="AllianceColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Expander>
@@ -399,6 +429,10 @@
                                         <ComboBox Name="FreeCompanyComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="FreeCompanyComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="FreeCompanyColorPicker" Width="70" Height="24"
+                                                          SelectedColor="LightSeaGreen"
+                                                          SelectedColorChanged="FreeCompanyColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="NovicePanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="초보자 채널"/>
@@ -410,6 +444,10 @@
                                         <ComboBox Name="NoviceComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="NoviceComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="NoviceColorPicker" Width="70" Height="24"
+                                                          SelectedColor="Gold"
+                                                          SelectedColorChanged="NoviceColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Expander>
@@ -445,6 +483,10 @@
                                         <ComboBox Name="LinkShell1ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="LinkShell1ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="LinkShell1ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="Cyan"
+                                                          SelectedColorChanged="LinkShell1ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="LinkShell2Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="링크셸2"/>
@@ -456,6 +498,10 @@
                                         <ComboBox Name="LinkShell2ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="LinkShell2ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="LinkShell2ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="LinkShell2ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="LinkShell3Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="링크셸3"/>
@@ -467,6 +513,10 @@
                                         <ComboBox Name="LinkShell3ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="LinkShell3ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="LinkShell3ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="LinkShell3ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="LinkShell4Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="링크셸4"/>
@@ -478,6 +528,10 @@
                                         <ComboBox Name="LinkShell4ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="LinkShell4ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="LinkShell4ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="LinkShell4ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="LinkShell5Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="링크셸5"/>
@@ -489,6 +543,10 @@
                                         <ComboBox Name="LinkShell5ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="LinkShell5ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="LinkShell5ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="LinkShell5ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="LinkShell6Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="링크셸6"/>
@@ -500,6 +558,10 @@
                                         <ComboBox Name="LinkShell6ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="LinkShell6ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="LinkShell6ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="LinkShell6ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="LinkShell7Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="링크셸7"/>
@@ -511,6 +573,10 @@
                                         <ComboBox Name="LinkShell7ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="LinkShell7ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="LinkShell7ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="LinkShell7ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="LinkShell8Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="링크셸8"/>
@@ -522,6 +588,10 @@
                                         <ComboBox Name="LinkShell8ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="LinkShell8ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="LinkShell8ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="LinkShell8ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Expander>
@@ -557,6 +627,10 @@
                                         <ComboBox Name="CWLinkShell1ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="CWLinkShell1ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="CWLinkShell1ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="CWLinkShell1ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="CWLinkShell2Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="서버초월링크쉘2"/>
@@ -568,6 +642,10 @@
                                         <ComboBox Name="CWLinkShell2ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="CWLinkShell2ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="CWLinkShell2ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="CWLinkShell2ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="CWLinkShell3Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="서버초월링크쉘3"/>
@@ -579,6 +657,10 @@
                                         <ComboBox Name="CWLinkShell3ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="CWLinkShell3ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="CWLinkShell3ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="CWLinkShell3ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="CWLinkShell4Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="서버초월링크쉘4"/>
@@ -590,6 +672,10 @@
                                         <ComboBox Name="CWLinkShell4ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="CWLinkShell4ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="CWLinkShell4ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="CWLinkShell4ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="CWLinkShell5Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="서버초월링크쉘5"/>
@@ -601,6 +687,10 @@
                                         <ComboBox Name="CWLinkShell5ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="CWLinkShell5ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="CWLinkShell5ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="CWLinkShell5ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="CWLinkShell6Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="서버초월링크쉘6"/>
@@ -612,6 +702,10 @@
                                         <ComboBox Name="CWLinkShell6ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="CWLinkShell6ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="CWLinkShell6ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="CWLinkShell6ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="CWLinkShell7Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="서버초월링크쉘7"/>
@@ -623,6 +717,10 @@
                                         <ComboBox Name="CWLinkShell7ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="CWLinkShell7ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="CWLinkShell7ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="CWLinkShell7ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="CWLinkShell8Panel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="서버초월링크쉘8"/>
@@ -634,6 +732,10 @@
                                         <ComboBox Name="CWLinkShell8ComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="CWLinkShell8ComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="CWLinkShell8ColorPicker" Width="70" Height="24"
+                                                          SelectedColor="CornflowerBlue"
+                                                          SelectedColorChanged="CWLinkShell8ColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Expander>
@@ -669,6 +771,10 @@
                                         <ComboBox Name="NoticeComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="NoticeComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="NoticeColorPicker" Width="70" Height="24"
+                                                          SelectedColor="DarkOrange"
+                                                          SelectedColorChanged="NoticeColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="SystemPanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="시스템"/>
@@ -680,6 +786,10 @@
                                         <ComboBox Name="SystemComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="SystemComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="SystemColorPicker" Width="70" Height="24"
+                                                          SelectedColor="Gray"
+                                                          SelectedColorChanged="SystemColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="ErrorPanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="에러"/>
@@ -691,6 +801,10 @@
                                         <ComboBox Name="ErrorComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="ErrorComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="ErrorColorPicker" Width="70" Height="24"
+                                                          SelectedColor="Red"
+                                                          SelectedColorChanged="ErrorColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="MarketSoldPanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="장터물품 판매"/>
@@ -702,6 +816,10 @@
                                         <ComboBox Name="MarketSoldComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="MarketSoldComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="MarketSoldColorPicker" Width="70" Height="24"
+                                                          SelectedColor="LimeGreen"
+                                                          SelectedColorChanged="MarketSoldColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="RecruitmentPanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="임무 모집"/>
@@ -713,6 +831,10 @@
                                         <ComboBox Name="RecruitmentComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="RecruitmentComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="RecruitmentColorPicker" Width="70" Height="24"
+                                                          SelectedColor="PaleGoldenrod"
+                                                          SelectedColorChanged="RecruitmentColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="NPCDialogPanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="NPC 대사"/>
@@ -724,6 +846,10 @@
                                         <ComboBox Name="NPCDialogComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="NPCDialogComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="NPCDialogColorPicker" Width="70" Height="24"
+                                                          SelectedColor="Wheat"
+                                                          SelectedColorChanged="NPCDialogColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                     <StackPanel Name="NPCAnnouncePanel" Orientation="Horizontal">
                                         <Label Foreground="White" Content="NPC 공지"/>
@@ -735,6 +861,10 @@
                                         <ComboBox Name="NPCAnnounceComboBox" SelectedIndex="0"
                                         ItemsSource="{util:EnumToCollection EnumType={x:Type core:ClientLanguage}}"
                                         SelectionChanged="NPCAnnounceComboBox_SelectionChanged"/>
+                                        <Label Foreground="White" Content="색상"/>
+                                        <xctk:ColorPicker Name="NPCAnnounceColorPicker" Width="70" Height="24"
+                                                          SelectedColor="Khaki"
+                                                          SelectedColorChanged="NPCAnnounceColorPicker_SelectedColorChanged"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Expander>

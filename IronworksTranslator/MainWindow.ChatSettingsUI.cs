@@ -3,6 +3,7 @@ using Serilog;
 using System.Windows;
 using System.Windows.Controls;
 using FontAwesome5;
+using System.Windows.Media;
 
 namespace IronworksTranslator
 {
@@ -173,6 +174,10 @@ namespace IronworksTranslator
                 else if (ui is ComboBox)
                 {
                     ((ComboBox)ui).SelectedIndex = (int)channel.MajorLanguage;
+                }
+                else if (ui is Xceed.Wpf.Toolkit.ColorPicker)
+                {
+                    ((Xceed.Wpf.Toolkit.ColorPicker)ui).SelectedColor = channel.Color;
                 }
             }
         }
