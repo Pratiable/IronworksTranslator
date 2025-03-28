@@ -465,10 +465,8 @@ namespace IronworksTranslator
                 icon.Icon.Equals(EFontAwesomeIcon.Solid_Bars) ?
                 EFontAwesomeIcon.Solid_AngleDoubleUp
                 : EFontAwesomeIcon.Solid_Bars;
-            ToolbarGrid.Visibility =
-                ToolbarGrid.Visibility.Equals(Visibility.Collapsed) ?
-                 Visibility.Visible : Visibility.Collapsed;
-            ShowOnly(UI.SettingsTab.None); // Hide all settings grid
+            
+            ShowOnly(UI.SettingsTab.None);
         }
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)

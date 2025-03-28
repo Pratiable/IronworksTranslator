@@ -42,15 +42,6 @@
                 <StackPanel Grid.Row="0" HorizontalAlignment="Left"
                             Orientation="Horizontal">
                     <Button
-                        Name="ToggleToolboxButton"
-                        Width="24" Height="24" 
-                        Background="#00000000"
-                        Foreground="White"
-                        BorderBrush="#FF7C7C7C"
-                        Click="CollapseButton_Click">
-                        <fa5:SvgAwesome Foreground="White" Icon="Solid_Bars" Margin="2"/>
-                    </Button>
-                    <Button
                         Visibility="Visible"
                         Name="ToggleDialogueWindowButton"
                         Width="24" Height="24"
@@ -60,12 +51,60 @@
                         Click="ToggleDialogueWindowButton_Click">
                         <fa5:SvgAwesome Foreground="White" Icon="Solid_Camera" Margin="2"/>
                     </Button>
+                    <Button x:Name="GeneralSettingsButton"
+                        Width="24" Height="24"
+                        Background="#00000000"
+                        Foreground="White"
+                        BorderBrush="#FF7C7C7C"
+                        Click="GeneralSettingsButton_Click">
+                        <fa5:SvgAwesome Foreground="White" Icon="Solid_Wrench" Margin="2"/>
+                    </Button>
+                    <Button x:Name="LanguageSettingsButton"
+                        Width="24" Height="24"
+                        Background="#00000000"
+                        Foreground="White"
+                        BorderBrush="#FF7C7C7C"
+                        Click="LanguageSettingsButton_Click">
+                        <fa5:SvgAwesome Foreground="White" Icon="Solid_Language" Margin="2"/>
+                    </Button>
+                    <Button x:Name="ChatSettingsButton"
+                        Width="24" Height="24"
+                        Background="#00000000"
+                        Foreground="White"
+                        BorderBrush="#FF7C7C7C"
+                        Click="ChatSettingsButton_Click">
+                        <fa5:SvgAwesome Foreground="White" Icon="Solid_Comments" Margin="2"/>
+                    </Button>
                 </StackPanel>
-                <!--<StackPanel Grid.Row="0" HorizontalAlignment="Center">
-                    <Label Name="AppHeaderLabel" Content="Ironworks Translator" HorizontalContentAlignment="Center" FontWeight="Bold"/>
-                </StackPanel>-->
                 <StackPanel Grid.Row="0" HorizontalAlignment="Right"
                                 Orientation="Horizontal">
+                    <Button Width="24" Height="24"
+                            Margin="0,0,4,0" VerticalAlignment="Center"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Name="HideContentBackground"
+                            Click="HideContentBackground_Click">
+                        <fa5:SvgAwesome Foreground="White" Icon="Solid_EyeSlash"/>
+                    </Button>
+                    <Slider Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Name="ContentOpacitySlider"
+                            Width="50"
+                            Margin="0,0,4,0"
+                            Minimum="0"
+                            Maximum="1.0"
+                            Style="{StaticResource CustomSliderStyle}"
+                            PreviewMouseDoubleClick="ContentOpacitySlider_PreviewMouseDoubleClick"
+                            ValueChanged="ContentOpacitySlider_ValueChanged"/>
+
+                    <Button Width="24" Height="24"
+                            Margin="0,0,4,0" VerticalAlignment="Center"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Name="ShowContentBackground"
+                            Click="ShowContentBackground_Click">
+                        <fa5:SvgAwesome Foreground="White" Icon="Solid_Eye" />
+                    </Button>
                     <Button Width="24" Height="24" Margin="0,0,0,0"
                             Background="#00000000"
                             Foreground="White"
@@ -85,74 +124,6 @@
 
             <!-- General toolbar -->
             <Grid Name="ToolbarGrid" Visibility="Collapsed" DockPanel.Dock="Top">
-            <!--<Grid Name="ToolbarGrid" Visibility="Visible" DockPanel.Dock="Top">-->
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid Grid.Column="0"
-                      Margin="0"
-                      Opacity="0.4"
-                      Background="Black">
-                </Grid>
-                <DockPanel Grid.Column="0">
-                    <StackPanel Orientation="Horizontal">
-                        <Button x:Name="GeneralSettingsButton"
-                            Width="24" Height="24"
-                            Background="#00000000"
-                            Foreground="White"
-                            BorderBrush="#FF7C7C7C"
-                                Click="GeneralSettingsButton_Click">
-                            <fa5:SvgAwesome Foreground="White" Icon="Solid_Wrench" Margin="2"/>
-                        </Button>
-                        <Button x:Name="LanguageSettingsButton"
-                            Width="24" Height="24"
-                            Background="#00000000"
-                            Foreground="White"
-                            BorderBrush="#FF7C7C7C"
-                                Click="LanguageSettingsButton_Click">
-                            <fa5:SvgAwesome Foreground="White" Icon="Solid_Language" Margin="2"/>
-                        </Button>
-                        <Button x:Name="ChatSettingsButton"
-                            Width="24" Height="24"
-                            Background="#00000000"
-                            Foreground="White"
-                            BorderBrush="#FF7C7C7C"
-                                Click="ChatSettingsButton_Click">
-                            <fa5:SvgAwesome Foreground="White" Icon="Solid_Comments" Margin="2"/>
-                        </Button>
-                    </StackPanel>
-                </DockPanel>
-                <DockPanel Grid.Column="0" HorizontalAlignment="Right">
-                    <StackPanel Orientation="Horizontal" Margin="0">
-                        <Button Width="24" Height="24"
-                                Margin="0,0,4,0" VerticalAlignment="Center"
-                                Background="Transparent"
-                                BorderBrush="Transparent"
-                                Name="HideContentBackground"
-                                Click="HideContentBackground_Click">
-                            <fa5:SvgAwesome Foreground="White" Icon="Solid_EyeSlash"/>
-                        </Button>
-                        <Slider Orientation="Horizontal"
-                                VerticalAlignment="Center"
-                                Name="ContentOpacitySlider"
-                                Width="50"
-                                Margin="0,0,4,0"
-                                Minimum="0"
-                                Maximum="1.0"
-                                Style="{StaticResource CustomSliderStyle}"
-                                PreviewMouseDoubleClick="ContentOpacitySlider_PreviewMouseDoubleClick"
-                                ValueChanged="ContentOpacitySlider_ValueChanged"/>
-
-                        <Button Width="24" Height="24"
-                                Margin="0,0,4,0" VerticalAlignment="Center"
-                                Background="Transparent"
-                                BorderBrush="Transparent"
-                                Name="ShowContentBackground"
-                                Click="ShowContentBackground_Click">
-                            <fa5:SvgAwesome Foreground="White" Icon="Solid_Eye" />
-                        </Button>
-                    </StackPanel>
-                </DockPanel>
             </Grid>
 
             <!-- Content area-->
