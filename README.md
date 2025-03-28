@@ -10,6 +10,7 @@ This version is an improved fork of the original [IronworksTranslator](https://g
 - Window position saving between sessions
 - Fixed translation window scroll position (no auto-scrolling when reading previous messages)
 - Maximum line count of 1000 to prevent performance issues
+- Channel-specific color settings for better visual distinction between chat types
 
 ## System Requirements
 - Windows 10 64bit or higher
