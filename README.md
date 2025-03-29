@@ -20,5 +20,29 @@ This version is an improved fork of the original [IronworksTranslator](https://g
 ## Setup Tips
 - You need to enter an Gemini API key when using the Gemini translation model
 
+## Building the Project
+
+To build the project yourself, you'll need the [.NET 6.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) installed.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/Pratiable/IronworksTranslator.git
+    cd IronworksTranslator
+    ```
+
+2.  **Build for development:**
+    This command compiles the code. The output will typically be in the `bin/Debug/net6.0-windows` folder.
+    ```bash
+    dotnet build
+    ```
+
+3.  **Publish for distribution:**
+    This command creates a distributable package, gathering all necessary files. It assumes the target machine has the .NET 6.0 Desktop Runtime installed (as specified in System Requirements).
+    ```bash
+    # For 64-bit Windows
+    dotnet publish -c Release -r win-x64 --self-contained false
+    ```
+    The published files will be in a folder like `bin/Release/net6.0-windows/win-x64/publish`. You can distribute the contents of this `publish` folder.
+
 ## License
 This project is distributed under the MIT License.
