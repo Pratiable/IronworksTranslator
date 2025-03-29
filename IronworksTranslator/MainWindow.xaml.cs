@@ -232,8 +232,28 @@ namespace IronworksTranslator
 
             ContentBackgroundGrid.Opacity = ironworksSettings.UI.ChatBackgroundOpacity;
             ContentOpacitySlider.Value = ironworksSettings.UI.ChatBackgroundOpacity;
-            ChatFontFamilyComboBox.SelectedValue = ironworksSettings.UI.ChatTextboxFontFamily;
-            var font = new FontFamily(ironworksSettings.UI.ChatTextboxFontFamily);
+
+            string fontFamilyName = ironworksSettings.UI.ChatTextboxFontFamily;
+            FontFamily font;
+            try
+            {
+                if (string.IsNullOrWhiteSpace(fontFamilyName))
+                {
+                    Log.Warning("ChatTextboxFontFamily is null or empty in settings. Using default '맑은 고딕'.");
+                    fontFamilyName = "맑은 고딕";
+                    ironworksSettings.UI.ChatTextboxFontFamily = fontFamilyName;
+                }
+                font = new FontFamily(fontFamilyName);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Failed to load font '{fontFamilyName}' from settings. Using default '맑은 고딕'.");
+                fontFamilyName = "맑은 고딕";
+                ironworksSettings.UI.ChatTextboxFontFamily = fontFamilyName;
+                font = new FontFamily(fontFamilyName);
+            }
+
+            ChatFontFamilyComboBox.SelectedValue = fontFamilyName;
             exampleChatBox.FontFamily = font;
             TranslatedChatBox.FontFamily = font;
             
