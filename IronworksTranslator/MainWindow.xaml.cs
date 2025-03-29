@@ -232,8 +232,35 @@ namespace IronworksTranslator
 
             ContentBackgroundGrid.Opacity = ironworksSettings.UI.ChatBackgroundOpacity;
             ContentOpacitySlider.Value = ironworksSettings.UI.ChatBackgroundOpacity;
-            ChatFontFamilyComboBox.SelectedValue = ironworksSettings.UI.ChatTextboxFontFamily;
-            var font = new FontFamily(ironworksSettings.UI.ChatTextboxFontFamily);
+
+            // --- Font loading safety check ---
+            string fontFamilyName = ironworksSettings.UI.ChatTextboxFontFamily;
+            FontFamily font;
+            try
+            {
+                // Check if the font name is null, empty, or consists only of white-space characters
+                if (string.IsNullOrWhiteSpace(fontFamilyName))
+                {
+                    Log.Warning("ChatTextboxFontFamily is null or empty in settings. Using default '맑은 고딕'.");
+                    fontFamilyName = "맑은 고딕"; // Default font
+                    ironworksSettings.UI.ChatTextboxFontFamily = fontFamilyName; // Update settings with default
+                }
+                font = new FontFamily(fontFamilyName);
+
+                // Additionally, check if the loaded font is actually available on the system (optional but safer)
+                // This check might be complex depending on how WPF handles unavailable fonts.
+                // For now, we rely on the FontFamily constructor potentially throwing an exception or handling it gracefully.
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Failed to load font '{fontFamilyName}' from settings. Using default '맑은 고딕'.");
+                fontFamilyName = "맑은 고딕"; // Fallback to default font on error
+                ironworksSettings.UI.ChatTextboxFontFamily = fontFamilyName; // Update settings with default
+                font = new FontFamily(fontFamilyName);
+            }
+            // --- End of Font loading safety check ---
+
+            ChatFontFamilyComboBox.SelectedValue = fontFamilyName; // Use the validated/defaulted font name
             exampleChatBox.FontFamily = font;
             TranslatedChatBox.FontFamily = font;
             
