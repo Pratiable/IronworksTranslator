@@ -1,4 +1,4 @@
-# IronworksTranslator
+# IronworksTranslator-Enhanced
 
 A tool that translates FFXIV in-game chat in real-time.
 
@@ -26,8 +26,8 @@ To build the project yourself, you'll need the [.NET 6.0 SDK](https://dotnet.mic
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/Pratiable/IronworksTranslator.git
-    cd IronworksTranslator
+    git clone https://github.com/Pratiable/IronworksTranslator-Enhanced.git
+    cd IronworksTranslator-Enhanced
     ```
 
 2.  **Build for development:**
