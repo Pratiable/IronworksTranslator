@@ -2,10 +2,10 @@
 
 A tool that translates FFXIV in-game chat in real-time.
 
-This version is an improved fork of the original [IronworksTranslator](https://github.com/sappho192/IronworksTranslator) with added support for the Gemini.
+This version is an improved fork of the original [IronworksTranslator](https://github.com/sappho192/IronworksTranslator), incorporating Gemini support along with several new features and quality-of-life improvements.
 
 ## New Features
-- Gemini translation engine support
+- Gemini translation support
 - Speaker-separated translation for improved accuracy
 - Window position saving between sessions
 - Fixed translation window scroll position (no auto-scrolling when reading previous messages)
@@ -18,7 +18,7 @@ This version is an improved fork of the original [IronworksTranslator](https://g
 - Final Fantasy XIV running in DirectX 11 mode
 
 ## Setup Tips
-- You need to enter an Gemini API key when using the Gemini translation model
+- You need to enter an Gemini API key when using the Gemini
 
 ## Building the Project
 
